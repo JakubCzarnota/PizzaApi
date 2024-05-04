@@ -40,34 +40,26 @@ const getAllPizzas = async (req: Request, res: Response) => {
 
     const connection = await Connect()
 
-    try {
+    const result = await Query<IPizzaModel[]>(connection, QUERY)
 
-        const result = await Query<IPizzaModel[]>(connection, QUERY)
+    let pizzaDtos: IPizzaDto[] = [];
 
-        let pizzaDtos: IPizzaDto[] = [];
+    result.forEach(element => {
+        const ingredients = element.ingredients != null ? element.ingredients.split(",") : []
 
-        result.forEach(element => {
-            const ingredients = element.ingredients != null ? element.ingredients.split(",") : []
-
-            pizzaDtos.push({
-                id: element.id,
-                name: element.name,
-                price: element.price,
-                ingredients: ingredients
-            })
+        pizzaDtos.push({
+            id: element.id,
+            name: element.name,
+            price: element.price,
+            ingredients: ingredients
         })
+    })
 
-        res.json(pizzaDtos)
-        res.status(200)
+    res.json(pizzaDtos)
+    res.status(200)
 
-    } catch (error: any) {
-        logger.error(NAMESPACE, error.message, error);
-        res.send("Sometching went wrong...")
-        res.status(500)
-    }
-    finally {
-        connection.end()
-    }
+    connection.end()
+
 
 }
 
@@ -83,33 +75,27 @@ const getPizza = async (req: Request<{ id: number }>, res: Response) => {
 
     const connection = await Connect()
 
-    try {
+    const result = await Query<IPizzaModel[]>(connection, QUERY)
 
-        const result = await Query<IPizzaModel[]>(connection, QUERY)
+    let pizzaDto: IPizzaDto | null = null;
 
-        let pizzaDto: IPizzaDto | null = null;
+    if (result.length > 0) {
+        const ingredients = result[0].ingredients != null ? result[0].ingredients.split(",") : []
 
-        if (result.length > 0) {
-            const ingredients = result[0].ingredients != null ? result[0].ingredients.split(",") : []
-
-            pizzaDto = {
-                id: result[0].id,
-                name: result[0].name,
-                price: result[0].price,
-                ingredients: ingredients
-            }
+        pizzaDto = {
+            id: result[0].id,
+            name: result[0].name,
+            price: result[0].price,
+            ingredients: ingredients
         }
-
-        res.json(pizzaDto)
-        res.status(200)
-
-    } catch (error: any) {
-        logger.error(NAMESPACE, error.message, error);
-        res.send("Something went wrong...")
-        res.status(500)
-    } finally {
-        connection.end()
     }
+
+    res.json(pizzaDto)
+    res.status(200)
+
+
+    connection.end()
+
 }
 
 const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response) => {
@@ -119,27 +105,19 @@ const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response)
 
     const connection = await Connect()
 
-    try {
+    const result = await Query<any>(connection, QUERY)
 
-        const result = await Query<any>(connection, QUERY)
+    const id = result.insertId
 
-        const id = result.insertId
+    newPizza.ingredients.forEach(element => {
+        Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
+    })
 
-        newPizza.ingredients.forEach(element => {
-            Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
-        })
+    res.send({ id })
+    res.status(201)
 
-        res.send({ id })
-        res.status(201)
+    connection.end()
 
-
-    } catch (error: any) {
-        logger.error(NAMESPACE, error.message, error);
-        res.send("Something went wrong...")
-        res.status(500)
-    } finally {
-        connection.end()
-    }
 }
 
 const deletePizza = async (req: Request<{ id: number }>, res: Response) => {
@@ -150,21 +128,13 @@ const deletePizza = async (req: Request<{ id: number }>, res: Response) => {
 
     const connection = await Connect()
 
-    try {
+    await Query(connection, QUERY2)
+    await Query(connection, QUERY)
 
-        await Query(connection, QUERY2)
-        await Query(connection, QUERY)
+    res.send("Successfully deleted")
+    res.status(204)
 
-        res.send("Successfully deleted")
-        res.status(204)
-
-    } catch (error: any) {
-        logger.error(NAMESPACE, error.message, error);
-        res.send("Something went wrong...")
-        res.status(500)
-    } finally {
-        connection.end()
-    }
+    connection.end()
 
 }
 
@@ -175,32 +145,24 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
 
     const connection = await Connect()
 
-    try {
+    if (updatePizza.name != null)
+        await Query(connection, `UPDATE pizzas SET name='${updatePizza.name}' WHERE id=${id}`)
 
-        if (updatePizza.name != null)
-            await Query(connection, `UPDATE pizzas SET name='${updatePizza.name}' WHERE id=${id}`)
+    if (updatePizza.price != null)
+        await Query(connection, `UPDATE pizzas SET price=${updatePizza.price} WHERE id=${id}`)
 
-        if (updatePizza.price != null)
-            await Query(connection, `UPDATE pizzas SET price=${updatePizza.price} WHERE id=${id}`)
+    if (updatePizza.ingredients != null) {
+        await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)
 
-        if (updatePizza.ingredients != null) {
-            await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)
-
-            updatePizza.ingredients.forEach(async element => {
-                await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
-            });
-        }
-
-        res.send("Updated Successfully")
-        res.status(200)
-
-    } catch (error: any) {
-        logger.error(NAMESPACE, error.message, error);
-        res.send("Something went wrong...")
-        res.status(500)
-    } finally {
-        connection.end()
+        updatePizza.ingredients.forEach(async element => {
+            await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
+        });
     }
+
+    res.send("Updated Successfully")
+    res.status(200)
+
+    connection.end()
 
 }
 
