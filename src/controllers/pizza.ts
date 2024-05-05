@@ -63,6 +63,7 @@ const getAllPizzas = async (req: Request, res: Response) => {
 
 }
 
+
 const getPizza = async (req: Request<{ id: number }>, res: Response) => {
     const id = req.params.id
 
