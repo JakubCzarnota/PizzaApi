@@ -3,7 +3,7 @@ import config from './config.js'
 
 import errorHandlingMiddleware from './middlewares/errorHandlingMiddleware.js'
 
-import pizzaRouter from './routers/pizza.js'
+import pizzaRouter from './routers/pizzaRouter.js'
 
 const app = express()
 

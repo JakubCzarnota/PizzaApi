@@ -1,5 +1,5 @@
 import express from 'express'
-import pizzaController from '../controllers/pizza.js'
+import pizzaController from '../controllers/pizzaController.js'
 
 import tryCatch from '../utils/tryCatch.js'
 import { check } from 'express-validator'
