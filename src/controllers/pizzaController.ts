@@ -1,6 +1,7 @@
 import { query, Request, Response } from 'express'
 import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
+import NotFoundError from '../errors/notFoundError.js'
 
 interface IPizzaModel {
     id: number,
@@ -55,11 +56,9 @@ const getAllPizzas = async (req: Request, res: Response) => {
         })
     })
 
-    res.json(pizzaDtos)
-    res.status(200)
-
     connection.end()
 
+    return res.status(200).json(pizzaDtos)
 
 }
 
@@ -78,24 +77,23 @@ const getPizza = async (req: Request<{ id: number }>, res: Response) => {
 
     const result = await Query<IPizzaModel[]>(connection, QUERY)
 
-    let pizzaDto: IPizzaDto | null = null;
+    let pizzaDto: IPizzaDto;
 
-    if (result.length > 0) {
-        const ingredients = result[0].ingredients != null ? result[0].ingredients.split(",") : []
+    if (result.length == 0)
+        throw new NotFoundError(`Pizza with id ${id} not found at getPizza`, 'pizza not found')
 
-        pizzaDto = {
-            id: result[0].id,
-            name: result[0].name,
-            price: result[0].price,
-            ingredients: ingredients
-        }
+    const ingredients = result[0].ingredients != null ? result[0].ingredients.split(",") : []
+
+    pizzaDto = {
+        id: result[0].id,
+        name: result[0].name,
+        price: result[0].price,
+        ingredients: ingredients
     }
 
-    res.json(pizzaDto)
-    res.status(200)
-
-
     connection.end()
+
+    return res.status(200).json(pizzaDto)
 
 }
 
@@ -114,28 +112,29 @@ const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response)
         Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
     })
 
-    res.send({ id })
-    res.status(201)
-
     connection.end()
+
+    return res.status(201).send({ id })
 
 }
 
 const deletePizza = async (req: Request<{ id: number }>, res: Response) => {
     const id = req.params.id
 
-    const QUERY = `DELETE FROM pizzas WHERE id = ${id}`
-    const QUERY2 = `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`
 
     const connection = await Connect()
 
-    await Query(connection, QUERY2)
-    await Query(connection, QUERY)
+    const result = await Query<IPizzaModel[]>(connection, `SELECT pizzas.id FROM pizzas WHERE pizzas.id = ${id}`)
 
-    res.send("Successfully deleted")
-    res.status(204)
+    if (result.length == 0)
+        throw new NotFoundError(`Pizza with id ${id} not found at deletePizza`, 'pizza not found')
+
+    await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)
+    await Query(connection, `DELETE FROM pizzas WHERE id = ${id}`)
 
     connection.end()
+
+    return res.status(204).send("Pizza deleted successfully")
 
 }
 
@@ -145,6 +144,11 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
     const updatePizza = req.body
 
     const connection = await Connect()
+
+    const result = await Query<IPizzaModel[]>(connection, `SELECT pizzas.id FROM pizzas WHERE pizzas.id = ${id}`)
+
+    if (result.length == 0)
+        throw new NotFoundError(`Pizza with id ${id} not found at updatePizza`, 'pizza not found')
 
     if (updatePizza.name != null)
         await Query(connection, `UPDATE pizzas SET name='${updatePizza.name}' WHERE id=${id}`)
@@ -159,11 +163,9 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
             await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
         });
     }
-
-    res.send("Updated Successfully")
-    res.status(200)
-
     connection.end()
+
+    return res.send("Pizza updated successfully").status(200)
 
 }
 
