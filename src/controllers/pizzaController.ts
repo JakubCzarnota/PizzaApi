@@ -93,17 +93,17 @@ const getPizza = async (req: Request<{ id: number }>, res: Response, connection 
 }
 
 const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response, connection : Connection) => {
-    const newPizza = req.body
+    const createPizzaDto = req.body
 
-    const QUERY = `INSERT INTO pizzas (name, price) VALUES ('${newPizza.name}', ${newPizza.price})`
+    const QUERY = `INSERT INTO pizzas (name, price) VALUES ('${createPizzaDto.name}', ${createPizzaDto.price})`
 
     const result = await Query<any>(connection, QUERY)
 
     const id = result.insertId
 
-    newPizza.ingredients.forEach(element => {
-        Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
-    })
+    for (const ingredientId of createPizzaDto.ingredients) {
+        await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${ingredientId})`)
+    }
 
     return res.status(201).send({ id })
 
@@ -144,9 +144,9 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
     if (updatePizza.ingredients != null) {
         await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)
 
-        updatePizza.ingredients.forEach(async element => {
-            await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
-        });
+        for (const ingredientId of updatePizza.ingredients) {
+            await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${ingredientId})`)
+        }
     }
 
     return res.send("Pizza updated successfully").status(200)
