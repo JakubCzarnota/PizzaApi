@@ -46,13 +46,16 @@ router.patch('/:id',
             .notEmpty().withMessage("id cannot be null")
             .isInt().withMessage("id must be int"),
         check('name')
+            .optional()
             .notEmpty().withMessage('name cannot be empty')
             .isString().withMessage("name must be string")
             .isLength({ max: 45 }).withMessage('namme cannot be longer than 45 characters'),
         check('price')
+            .optional()
             .notEmpty().withMessage('price cannot be empty')
             .isCurrency({ allow_decimal: true, allow_negatives: false }).withMessage('price must be valid price'),
         check('ingredients')
+            .optional()
             .isArray().withMessage('ingredients must be an array')
     ],
     tryCatch(pizzaController.updatePizza))
