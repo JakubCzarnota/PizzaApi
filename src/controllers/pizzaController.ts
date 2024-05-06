@@ -2,6 +2,7 @@ import { query, Request, Response } from 'express'
 import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
+import { Connection } from 'mysql'
 
 declare global {
     interface IPizzaModel {
@@ -34,14 +35,12 @@ declare global {
 
 const NAMESPACE = "pizza controller"
 
-const getAllPizzas = async (req: Request, res: Response) => {
+const getAllPizzas = async (req: Request, res: Response, connection : Connection) => {
     const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
         + 'FROM pizzas '
         + 'LEFT join pizzas_ingredients ON pizzas_ingredients.pizza_id = pizzas.id '
         + 'LEFT join ingredients ON ingredients.id = pizzas_ingredients.ingredient_id '
         + 'GROUP BY pizzas.id'
-
-    const connection = await Connect()
 
     const result = await Query<IPizzaModel[]>(connection, QUERY)
 
@@ -58,14 +57,12 @@ const getAllPizzas = async (req: Request, res: Response) => {
         })
     })
 
-    connection.end()
-
     return res.status(200).json(pizzaDtos)
 
 }
 
 
-const getPizza = async (req: Request<{ id: number }>, res: Response) => {
+const getPizza = async (req: Request<{ id: number }>, res: Response, connection : Connection) => {
     const id = req.params.id
 
     const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
@@ -74,8 +71,6 @@ const getPizza = async (req: Request<{ id: number }>, res: Response) => {
         + 'LEFT join ingredients ON ingredients.id = pizzas_ingredients.ingredient_id '
         + `WHERE pizzas.id = ${id} `
         + 'GROUP BY pizzas.id'
-
-    const connection = await Connect()
 
     const result = await Query<IPizzaModel[]>(connection, QUERY)
 
@@ -93,18 +88,14 @@ const getPizza = async (req: Request<{ id: number }>, res: Response) => {
         ingredients: ingredients
     }
 
-    connection.end()
-
     return res.status(200).json(pizzaDto)
 
 }
 
-const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response) => {
+const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response, connection : Connection) => {
     const newPizza = req.body
 
     const QUERY = `INSERT INTO pizzas (name, price) VALUES ('${newPizza.name}', ${newPizza.price})`
-
-    const connection = await Connect()
 
     const result = await Query<any>(connection, QUERY)
 
@@ -114,17 +105,13 @@ const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response)
         Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
     })
 
-    connection.end()
-
     return res.status(201).send({ id })
 
 }
 
-const deletePizza = async (req: Request<{ id: number }>, res: Response) => {
+const deletePizza = async (req: Request<{ id: number }>, res: Response, connection : Connection) => {
     const id = req.params.id
 
-
-    const connection = await Connect()
 
     const result = await Query<IPizzaModel[]>(connection, `SELECT pizzas.id FROM pizzas WHERE pizzas.id = ${id}`)
 
@@ -134,18 +121,14 @@ const deletePizza = async (req: Request<{ id: number }>, res: Response) => {
     await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)
     await Query(connection, `DELETE FROM pizzas WHERE id = ${id}`)
 
-    connection.end()
-
     return res.status(204).send("Pizza deleted successfully")
 
 }
 
-const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, res: Response) => {
+const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, res: Response, connection : Connection) => {
 
     const id = req.params.id
     const updatePizza = req.body
-
-    const connection = await Connect()
 
     const result = await Query<IPizzaModel[]>(connection, `SELECT pizzas.id FROM pizzas WHERE pizzas.id = ${id}`)
 
@@ -165,7 +148,6 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
             await Query(connection, `INSERT INTO pizzas_ingredients VALUES (${id}, ${element})`)
         });
     }
-    connection.end()
 
     return res.send("Pizza updated successfully").status(200)
 

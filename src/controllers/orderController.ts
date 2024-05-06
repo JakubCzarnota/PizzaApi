@@ -2,6 +2,7 @@ import { query, Request, Response } from 'express'
 import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
+import { Connection } from 'mysql'
 
 declare global {
     interface IOrdersPizzasModel {
@@ -51,16 +52,15 @@ declare global {
     }
 }
 
-const getAllOrders = async (req: Request, res: Response) => {
+const getAllOrders = async (req: Request, res: Response, connection: Connection) => {
 
-    const conntection = await Connect()
 
-    const result = await Query<IOrderModel[]>(conntection, 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders')
+    const result = await Query<IOrderModel[]>(connection, 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders')
 
     let orderDtos: IOrderDto[] = []
 
     for (const item of result) {
-        const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(conntection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
+        const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
 
         const pizzaIds = ordersPizzasModels.map(value => {
             return value.pizzaId as number
@@ -76,7 +76,7 @@ const getAllOrders = async (req: Request, res: Response) => {
                 + `WHERE pizzas.id = ${pizzaId} `
                 + 'GROUP BY pizzas.id'
 
-            pizzaModels.push((await Query<IPizzaModel[]>(conntection, query))[0])
+            pizzaModels.push((await Query<IPizzaModel[]>(connection, query))[0])
         }
 
         const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
@@ -102,25 +102,21 @@ const getAllOrders = async (req: Request, res: Response) => {
         })
     }
 
-    conntection.end()
-
     return res.status(200).json(orderDtos)
 
 }
 
-const getOrder = async (req: Request<{ id: number }>, res: Response) => {
+const getOrder = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
-    const conntection = await Connect()
-
-    const result = await Query<IOrderModel[]>(conntection, `SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders WHERE orders.id = ${id}`)
+    const result = await Query<IOrderModel[]>(connection, `SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders WHERE orders.id = ${id}`)
 
     if (result.length == 0)
         throw new NotFoundError(`Order with id ${id} not found at getOrder`, 'order not found')
 
     const item = result[0]
 
-    const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(conntection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
+    const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
 
     const pizzaIds = ordersPizzasModels.map(value => {
         return value.pizzaId as number
@@ -136,7 +132,7 @@ const getOrder = async (req: Request<{ id: number }>, res: Response) => {
             + `WHERE pizzas.id = ${pizzaId} `
             + 'GROUP BY pizzas.id'
 
-        pizzaModels.push((await Query<IPizzaModel[]>(conntection, query))[0])
+        pizzaModels.push((await Query<IPizzaModel[]>(connection, query))[0])
     }
 
     const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
@@ -161,17 +157,12 @@ const getOrder = async (req: Request<{ id: number }>, res: Response) => {
         pizzas: pizzaDtos
     }
 
-
-    conntection.end()
-
     return res.status(200).json(orderDto)
 
 }
 
-const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response) => {
+const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response, connection: Connection) => {
     const createOrderDto = req.body
-
-    const connection = await Connect()
 
     const query = `INSERT INTO orders `
         + `(orders.first_name, orders.Last_name, orders.phone_number, orders.city, orders.street, orders.building_number) `
@@ -186,32 +177,25 @@ const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response)
         await Query(connection, `INSERT INTO orders_pizzas VALUES (${id}, ${pizzaId})`)
     }
 
-    connection.end()
-
     return res.status(201).json(id)
 
 }
 
-const deleteOrder = async (req: Request<{ id: number }>, res: Response) => {
+const deleteOrder = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
-
-    const connection = await Connect()
 
     await Query(connection, `DELETE FROM orders_pizzas WHERE orders_pizzas.order_id = ${id}`)
     await Query(connection, `DELETE FROM orders WHERE orders.id = ${id}`)
 
-    connection.end()
 
     return res.status(204).send("Order deleted successfully")
 
 }
 
-const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, res: Response) => {
+const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, res: Response, connection: Connection) => {
     const id = req.params.id
 
     const updateOrderDto = req.body
-
-    const connection = await Connect()
 
     if (updateOrderDto.first_name != null)
         await Query(connection, `UPDATE orders SET orders.first_name = '${updateOrderDto.first_name}' WHERE orders.id = ${id}`)
@@ -238,8 +222,6 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
             await Query(connection, `INSERT INTO orders_pizzas VALUES (${id}, ${pizzaId})`)
         }
     }
-
-    connection.end()
 
     return res.send("Order updated successfully").status(200)
 }
