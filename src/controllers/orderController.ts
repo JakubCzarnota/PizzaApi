@@ -184,6 +184,11 @@ const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response,
 const deleteOrder = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
+    const result = await Query<IOrderModel[]>(connection, `SELECT orders.id FROM orders where orders.id = ${id}`)
+
+    if (result.length == 0)
+        throw new NotFoundError(`Order with id ${id} not found at deleteOrder`, 'order not found')
+
     await Query(connection, `DELETE FROM orders_pizzas WHERE orders_pizzas.order_id = ${id}`)
     await Query(connection, `DELETE FROM orders WHERE orders.id = ${id}`)
 
@@ -196,6 +201,11 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
     const id = req.params.id
 
     const updateOrderDto = req.body
+
+    const result = await Query<IOrderModel[]>(connection, `SELECT orders.id FROM orders where orders.id = ${id}`)
+
+    if (result.length == 0)
+        throw new NotFoundError(`Order with id ${id} not found at deleteOrder`, 'order not found')
 
     if (updateOrderDto.first_name != null)
         await Query(connection, `UPDATE orders SET orders.first_name = '${updateOrderDto.first_name}' WHERE orders.id = ${id}`)
