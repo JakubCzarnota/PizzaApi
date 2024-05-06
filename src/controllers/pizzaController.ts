@@ -3,30 +3,32 @@ import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 
-interface IPizzaModel {
-    id: number,
-    name: String,
-    price: number
-    ingredients: String
-}
+declare global {
+    interface IPizzaModel {
+        id: number,
+        name: String,
+        price: number
+        ingredients: String
+    }
 
-interface IPizzaDto {
-    id?: number,
-    name: String,
-    price: number,
-    ingredients: String[],
-}
+    interface IPizzaDto {
+        id?: number,
+        name: String,
+        price: number,
+        ingredients: String[],
+    }
 
-interface ICreatePizzaDto {
-    name: String,
-    price: number,
-    ingredients: number[],
-}
+    interface ICreatePizzaDto {
+        name: String,
+        price: number,
+        ingredients: number[],
+    }
 
-interface IUpdatePizzaDto {
-    name?: String,
-    price?: number,
-    ingredients?: number[],
+    interface IUpdatePizzaDto {
+        name?: String,
+        price?: number,
+        ingredients?: number[],
+    }
 }
 
 

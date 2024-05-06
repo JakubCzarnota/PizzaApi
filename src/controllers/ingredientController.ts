@@ -3,21 +3,23 @@ import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 
-interface IIngredientModel {
-    id: number,
-    name: string
-}
-
-interface IIngredientDto {
-    id: number,
-    name: string
-}
-
-interface ICreateIngredientDto {
-    name: string
-}
-interface IUpdateIngredientDto {
-    name: string
+declare global{
+    interface IIngredientModel {
+        id: number,
+        name: string
+    }
+    
+    interface IIngredientDto {
+        id: number,
+        name: string
+    }
+    
+    interface ICreateIngredientDto {
+        name: string
+    }
+    interface IUpdateIngredientDto {
+        name: string
+    }
 }
 
 const getAllIngredients = async (req: Request, res: Response) => {
