@@ -14,11 +14,11 @@ const app = express()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/pizza', pizzaRouter)
+app.use('/pizzas', pizzaRouter)
 
-app.use('/ingredient', ingredientRouter)
+app.use('/ingredients', ingredientRouter)
 
-app.use('/order', orderRouter)
+app.use('/orders', orderRouter)
 
 app.all('/*', (req, res, next) => {
     next(new NotFoundError(`Invalid path: ${req.url}`, 'Not found'))
