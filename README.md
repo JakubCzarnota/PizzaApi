@@ -6,7 +6,7 @@ The documentation includes list of all controllers with all endpoints.
 ### Pizza Controller
 Pizza Controler - responsible for all the actions involveing pizza
 
-|Method|Route|Description|Request body|Response body|Possible errors|
+|Method|Description|Route|Request body|Response body|Possible errors|
 |---|---|---|---|---|---|
 |GET|Returns all pizzas|.../api/pizzas|━|``` [{id: number, name: String, price: number,ingredients: String[]}, ...] ```|━|
 |GET|Returns pizza with selected id|.../api/pizzas/{id}|━|``` {id: number, name: String, price: number,ingredients: String[]} ```|Not found error, Validation Error|
@@ -19,7 +19,7 @@ Pizza Controler - responsible for all the actions involveing pizza
 ### Ingredient Controller
 Ingredient Controler - responsible for all the actions involveing ingredients
 
-|Method|Route|Description|Request body|Response body|Possible errors|
+|Method|Description|Route|Request body|Response body|Possible errors|
 |---|---|---|---|---|---|
 |GET|Returns all ingredients|.../api/ingredients|━|``` [{id: number, name: String, ...] ```|━|
 |GET|Returns ingredient with selected id|.../api/ingredients/{id}|━|``` {id: number, name: String} ```|Not found error, Validation Error|
@@ -32,7 +32,7 @@ Ingredient Controler - responsible for all the actions involveing ingredients
 ### Order Controller
 Order Controler - responsible for all the actions involveing orders
 
-|Method|Route|Description|Request body|Response body|Possible errors|
+|Method|Description|Route|Request body|Response body|Possible errors|
 |---|---|---|---|---|---|
 |GET|Returns all orders|.../api/orders|━|``` [{id: number, first_name: string, last_name: string, phone_number: string, city: string, street: string, building_number: string pizzas: IPizzaDto[]}, ...] ```|━|
 |GET|Returns order with selected id|.../api/orders/{id}|━|``` {id: number, first_name: string, last_name: string, phone_number: string, city: string, street: string, building_number: string pizzas: IPizzaDto[]}, ```|Not found error, Validation Error|
