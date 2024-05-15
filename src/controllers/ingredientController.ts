@@ -25,7 +25,7 @@ declare global {
 
 const getAllIngredients = async (req: Request, res: Response, connection: Connection) => {
 
-    const result = await Query<IIngredientModel[]>(connection, 'SELECT ingredients.id, ingredients.name FROM ingredients')
+    const result = await Query<IIngredientModel[]>(connection, 'SELECT ingredients.id, ingredients.name FROM ingredients ORDER BY ingredients.id')
 
     return res.status(200).json(result as IIngredientDto[])
 

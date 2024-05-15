@@ -35,12 +35,13 @@ declare global {
 
 const NAMESPACE = "pizza controller"
 
-const getAllPizzas = async (req: Request, res: Response, connection : Connection) => {
+const getAllPizzas = async (req: Request, res: Response, connection: Connection) => {
     const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
         + 'FROM pizzas '
         + 'LEFT join pizzas_ingredients ON pizzas_ingredients.pizza_id = pizzas.id '
         + 'LEFT join ingredients ON ingredients.id = pizzas_ingredients.ingredient_id '
-        + 'GROUP BY pizzas.id'
+        + 'GROUP BY pizzas.id '
+        + 'ORDER BY pizzas.id'
 
     const result = await Query<IPizzaModel[]>(connection, QUERY)
 
@@ -62,7 +63,7 @@ const getAllPizzas = async (req: Request, res: Response, connection : Connection
 }
 
 
-const getPizza = async (req: Request<{ id: number }>, res: Response, connection : Connection) => {
+const getPizza = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
     const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
@@ -92,7 +93,7 @@ const getPizza = async (req: Request<{ id: number }>, res: Response, connection 
 
 }
 
-const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response, connection : Connection) => {
+const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response, connection: Connection) => {
     const createPizzaDto = req.body
 
     const QUERY = `INSERT INTO pizzas (name, price) VALUES ('${createPizzaDto.name}', ${createPizzaDto.price})`
@@ -109,7 +110,7 @@ const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response,
 
 }
 
-const deletePizza = async (req: Request<{ id: number }>, res: Response, connection : Connection) => {
+const deletePizza = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
 
@@ -125,7 +126,7 @@ const deletePizza = async (req: Request<{ id: number }>, res: Response, connecti
 
 }
 
-const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, res: Response, connection : Connection) => {
+const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, res: Response, connection: Connection) => {
 
     const id = req.params.id
     const updatePizza = req.body
