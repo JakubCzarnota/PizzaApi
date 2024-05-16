@@ -39,7 +39,10 @@ router.post('/',
             .notEmpty().withMessage('price cannot be empty')
             .isCurrency({ allow_decimal: true, allow_negatives: false }).withMessage('price must be currency'),
         check('ingredients')
-            .isArray().withMessage('ingredients must be an array')
+            .isArray().withMessage('ingredients must be an array'),
+        check("count")
+            .notEmpty().withMessage('count cannot be empty')
+            .isInt({ min: 0 }).withMessage("count must be int, greater or equal 0")
     ],
     tryCatch(pizzaController.createPizza))
 
@@ -67,7 +70,10 @@ router.patch('/:id',
             .isCurrency({ allow_decimal: true, allow_negatives: false }).withMessage('price must be valid price'),
         check('ingredients')
             .optional()
-            .isArray().withMessage('ingredients must be an array')
+            .isArray().withMessage('ingredients must be an array'),
+        check("count")
+            .optional()
+            .isInt({ min: 0 }).withMessage("count must be int, greater or equal 0")
     ],
     tryCatch(pizzaController.updatePizza))
 

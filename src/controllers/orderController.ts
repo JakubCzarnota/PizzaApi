@@ -4,6 +4,7 @@ import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
 import paginate from '../utils/pagination.js'
+import UnavalibleError from '../errors/unavalibleError.js'
 
 declare global {
     interface IOrdersPizzasModel {
@@ -95,7 +96,8 @@ const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res
                 id: value.id,
                 name: value.name,
                 price: value.price,
-                ingredients: ingredients
+                ingredients: ingredients,
+                count: value.count
             }
         })
 
@@ -151,7 +153,8 @@ const getOrder = async (req: Request<{ id: number }>, res: Response, connection:
             id: value.id,
             name: value.name,
             price: value.price,
-            ingredients: ingredients
+            ingredients: ingredients,
+            count: value.count
         }
     })
 
@@ -170,8 +173,42 @@ const getOrder = async (req: Request<{ id: number }>, res: Response, connection:
 
 }
 
+const arePizzasAvalible = async (pizzaIds: number[], connection: Connection) => {
+
+    const distinctPizzaIds = [...new Set(pizzaIds)]
+
+    for (const id of distinctPizzaIds) {
+        const count = pizzaIds.filter(x => x == id).length
+
+        const result = (await Query<{ count: number }[]>(connection, `SELECT pizzas.count AS count FROM pizzas WHERE pizzas.id = ${id}`))[0]
+
+        if (count > result.count)
+            return false
+    }
+
+    return true
+
+}
+
+const decrementPizzaCounts = async (pizzaIds: number[], connection: Connection) => {
+
+    const distinctPizzaIds = [...new Set(pizzaIds)]
+
+    for (const id of distinctPizzaIds) {
+        const count = pizzaIds.filter(x => x == id).length
+
+        await Query(connection, `UPDATE pizzas SET pizzas.count = pizzas.count - ${count} WHERE pizzas.id = ${id} AND pizzas.count > ${count - 1}`)
+    }
+
+}
+
 const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response, connection: Connection) => {
     const createOrderDto = req.body
+
+    if (!(await arePizzasAvalible(createOrderDto.pizzas, connection)))
+        throw new UnavalibleError(`Order cannot be created because of not enough pizzas`, 'not all pizzas are avalible')
+
+    await decrementPizzaCounts(createOrderDto.pizzas, connection)
 
     const query = `INSERT INTO orders `
         + `(orders.first_name, orders.Last_name, orders.phone_number, orders.city, orders.street, orders.building_number) `

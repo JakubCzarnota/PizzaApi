@@ -11,6 +11,7 @@ declare global {
         name: String,
         price: number
         ingredients: String
+        count: number
     }
 
     interface IPizzaDto {
@@ -18,18 +19,22 @@ declare global {
         name: String,
         price: number,
         ingredients: String[],
+        count: number
     }
 
     interface ICreatePizzaDto {
         name: String,
         price: number,
         ingredients: number[],
+        count: Number
     }
 
     interface IUpdatePizzaDto {
         name?: String,
         price?: number,
         ingredients?: number[],
+        number?: number,
+        count?: number
     }
 }
 
@@ -47,7 +52,7 @@ const getPizzasCount = async (req: Request, res: Response, connection: Connectio
 const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
-    const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
+    const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients, pizzas.count '
         + 'FROM pizzas '
         + 'LEFT join pizzas_ingredients ON pizzas_ingredients.pizza_id = pizzas.id '
         + 'LEFT join ingredients ON ingredients.id = pizzas_ingredients.ingredient_id '
@@ -65,7 +70,8 @@ const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res
             id: element.id,
             name: element.name,
             price: element.price,
-            ingredients: ingredients
+            ingredients: ingredients,
+            count: element.count
         })
     })
 
@@ -97,7 +103,8 @@ const getPizza = async (req: Request<{ id: number }>, res: Response, connection:
         id: result[0].id,
         name: result[0].name,
         price: result[0].price,
-        ingredients: ingredients
+        ingredients: ingredients,
+        count: result[0].count
     }
 
     return res.status(200).json(pizzaDto)
@@ -107,7 +114,7 @@ const getPizza = async (req: Request<{ id: number }>, res: Response, connection:
 const createPizza = async (req: Request<{}, {}, ICreatePizzaDto>, res: Response, connection: Connection) => {
     const createPizzaDto = req.body
 
-    const QUERY = `INSERT INTO pizzas (name, price) VALUES ('${createPizzaDto.name}', ${createPizzaDto.price})`
+    const QUERY = `INSERT INTO pizzas (name, price, count) VALUES ('${createPizzaDto.name}', ${createPizzaDto.price}, ${createPizzaDto.count})`
 
     const result = await Query<any>(connection, QUERY)
 
@@ -152,6 +159,9 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
 
     if (updatePizza.price != null)
         await Query(connection, `UPDATE pizzas SET price=${updatePizza.price} WHERE id=${id}`)
+
+    if(updatePizza.count != null)
+        await Query(connection, `UPDATE `)
 
     if (updatePizza.ingredients != null) {
         await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)

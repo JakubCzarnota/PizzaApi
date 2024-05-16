@@ -3,6 +3,7 @@ import logger from '../logger.js'
 
 import ValidationError from '../errors/validationError.js'
 import NotFoundError from '../errors/notFoundError.js'
+import UnavalibleError from '../errors/unavalibleError.js'
 
 const NAMESPACE = "errorHandlingMiddleware"
 
@@ -25,6 +26,15 @@ const errorHandlingMiddleware = (error: any, req: Request, res: Response, next: 
         return res.status(validationError.statusCode).json({
             status: validationError.statusCode,
             errors: validationError.errors
+        })
+    }
+
+    if (error instanceof UnavalibleError){
+        const unavalibleError = error as UnavalibleError
+
+        return res.status(unavalibleError.statusCode).json({
+            status: unavalibleError.statusCode,
+            errors: unavalibleError.error
         })
     }
 

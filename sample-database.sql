@@ -2,7 +2,7 @@ CREATE DATABASE  IF NOT EXISTS `pizza-api` /*!40100 DEFAULT CHARACTER SET utf8mb
 USE `pizza-api`;
 -- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
 --
--- Host: localhost    Database: pizza-api
+-- Host: localhost    Database: fnaf
 -- ------------------------------------------------------
 -- Server version	8.0.37
 
@@ -30,7 +30,7 @@ CREATE TABLE `ingredients` (
   PRIMARY KEY (`Id`),
   UNIQUE KEY `Id_UNIQUE` (`Id`),
   UNIQUE KEY `Name_UNIQUE` (`Name`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +50,7 @@ CREATE TABLE `orders` (
   `Building_number` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `idorder_UNIQUE` (`Id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -81,6 +81,7 @@ CREATE TABLE `pizzas` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `Name` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Price` decimal(5,2) NOT NULL,
+  `Count` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`Id`),
   UNIQUE KEY `Id_UNIQUE` (`Id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_polish_ci;
@@ -102,6 +103,10 @@ CREATE TABLE `pizzas_ingredients` (
   CONSTRAINT `pizza_id` FOREIGN KEY (`pizza_id`) REFERENCES `pizzas` (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping events for database 'fnaf'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -112,4 +117,4 @@ CREATE TABLE `pizzas_ingredients` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-05-06 20:23:09
+-- Dump completed on 2024-05-16 17:35:01
