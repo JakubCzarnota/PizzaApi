@@ -8,6 +8,8 @@ const NAMESPACE = "ingredientRouter"
 
 const router = express.Router()
 
+router.get('/count', tryCatch(ingredientController.getIngredientsCount))
+
 router.get('/',
     [
         check("page")

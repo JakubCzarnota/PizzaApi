@@ -36,6 +36,14 @@ declare global {
 
 const NAMESPACE = "pizza controller"
 
+const getPizzasCount = async (req: Request, res: Response, connection: Connection) => {
+
+    const result = await Query<{ count: number }[]>(connection, 'SELECT COUNT(pizzas.id) as "count" FROM pizzas')
+
+    return res.status(200).json(result[0])
+
+}
+
 const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
@@ -158,6 +166,7 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
 }
 
 export default {
+    getPizzasCount,
     getAllPizzas,
     getPizza,
     createPizza,

@@ -24,6 +24,14 @@ declare global {
     }
 }
 
+const getIngredientsCount = async (req: Request, res: Response, connection: Connection) => {
+
+    const result = await Query<{ count: number }[]>(connection, 'SELECT COUNT(ingredients.id) as "count" FROM ingredients')
+
+    return res.status(200).json(result[0])
+
+}
+
 const getAllIngredients = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
@@ -87,6 +95,7 @@ const updateIngredient = async (req: Request<{ id: number }, {}, IUpdateIngredie
 }
 
 export default {
+    getIngredientsCount,
     getAllIngredients,
     getIngredient,
     createIngredient,

@@ -53,6 +53,14 @@ declare global {
     }
 }
 
+const getOrdersCount = async (req: Request, res: Response, connection: Connection) => {
+
+    const result = await Query<{ count: number }[]>(connection, 'SELECT COUNT(orders.id) as "count" FROM orders')
+
+    return res.status(200).json(result[0])
+
+}
+
 const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
@@ -238,6 +246,7 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
 }
 
 export default {
+    getOrdersCount,
     getAllOrders,
     getOrder,
     createOrder,

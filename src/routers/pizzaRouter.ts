@@ -8,6 +8,8 @@ const NAMESPACE = "pizza"
 
 const router = express.Router()
 
+router.get('/count', tryCatch(pizzaController.getPizzasCount))
+
 router.get('/',
     [
         check("page")

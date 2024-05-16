@@ -6,6 +6,8 @@ import { check } from 'express-validator'
 
 const router = express.Router()
 
+router.get('/count', tryCatch(orderControler.getOrdersCount))
+
 router.get('/',
     [
         check("page")
