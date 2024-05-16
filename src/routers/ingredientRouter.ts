@@ -8,7 +8,16 @@ const NAMESPACE = "ingredientRouter"
 
 const router = express.Router()
 
-router.get('/', tryCatch(ingredientController.getAllIngredients))
+router.get('/',
+    [
+        check("page")
+            .optional()
+            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0"),
+        check("count")
+            .optional()
+            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0")
+    ],
+    tryCatch(ingredientController.getAllIngredients))
 
 router.get('/:id',
     [

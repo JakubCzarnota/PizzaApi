@@ -4,7 +4,7 @@ import ValidationError from '../errors/validationError.js'
 import { Connection } from 'mysql'
 import { Connect } from '../mysql.js'
 
-const tryCatch = <P, ResBody, ReqBody>(controller: (req: Request<P, ResBody, ReqBody>, res: Response, connection: Connection) => Promise<any>) => async (req: Request<P, ResBody, ReqBody>, res: Response, next: NextFunction) => {
+const tryCatch = <P, ResBody, ReqBody, ReqQuery>(controller: (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response, connection: Connection) => Promise<any>) => async (req: Request<P, ResBody, ReqBody, ReqQuery>, res: Response, next: NextFunction) => {
     const connection = await Connect()
 
     try {

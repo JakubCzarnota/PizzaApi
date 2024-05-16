@@ -3,6 +3,7 @@ import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
+import paginate from '../utils/pagination.js'
 
 declare global {
     interface IPizzaModel {
@@ -35,7 +36,9 @@ declare global {
 
 const NAMESPACE = "pizza controller"
 
-const getAllPizzas = async (req: Request, res: Response, connection: Connection) => {
+const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
+    const paginationOptions = req.query
+
     const QUERY = 'SELECT pizzas.id, pizzas.name, pizzas.price, GROUP_CONCAT(ingredients.name) AS ingredients '
         + 'FROM pizzas '
         + 'LEFT join pizzas_ingredients ON pizzas_ingredients.pizza_id = pizzas.id '
@@ -58,7 +61,7 @@ const getAllPizzas = async (req: Request, res: Response, connection: Connection)
         })
     })
 
-    return res.status(200).json(pizzaDtos)
+    return res.status(200).json(paginate(pizzaDtos, paginationOptions))
 
 }
 

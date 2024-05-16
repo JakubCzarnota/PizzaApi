@@ -3,6 +3,7 @@ import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
+import paginate from '../utils/pagination.js'
 
 declare global {
     interface IOrdersPizzasModel {
@@ -52,8 +53,8 @@ declare global {
     }
 }
 
-const getAllOrders = async (req: Request, res: Response, connection: Connection) => {
-
+const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
+    const paginationOptions = req.query
 
     const result = await Query<IOrderModel[]>(connection, 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders ORDER BY orders.id')
 
@@ -102,7 +103,7 @@ const getAllOrders = async (req: Request, res: Response, connection: Connection)
         })
     }
 
-    return res.status(200).json(orderDtos)
+    return res.status(200).json(paginate(orderDtos, paginationOptions))
 
 }
 

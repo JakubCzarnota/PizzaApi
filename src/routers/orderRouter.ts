@@ -6,7 +6,16 @@ import { check } from 'express-validator'
 
 const router = express.Router()
 
-router.get('/', tryCatch(orderControler.getAllOrders))
+router.get('/',
+    [
+        check("page")
+            .optional()
+            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0"),
+        check("count")
+            .optional()
+            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0")
+    ],
+    tryCatch(orderControler.getAllOrders))
 
 router.get('/:id',
     [

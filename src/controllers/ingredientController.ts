@@ -3,6 +3,7 @@ import { Connect, Query } from '../mysql.js'
 import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
+import paginate from '../utils/pagination.js'
 
 declare global {
     interface IIngredientModel {
@@ -23,11 +24,12 @@ declare global {
     }
 }
 
-const getAllIngredients = async (req: Request, res: Response, connection: Connection) => {
+const getAllIngredients = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
+    const paginationOptions = req.query
 
     const result = await Query<IIngredientModel[]>(connection, 'SELECT ingredients.id, ingredients.name FROM ingredients ORDER BY ingredients.id')
 
-    return res.status(200).json(result as IIngredientDto[])
+    return res.status(200).json(paginate(result as IIngredientDto[], paginationOptions))
 
 }
 
