@@ -149,19 +149,24 @@ const updatePizza = async (req: Request<{ id: number }, {}, IUpdatePizzaDto>, re
     const id = req.params.id
     const updatePizza = req.body
 
+    const updates: string[] = []
+
     const result = await Query<IPizzaModel[]>(connection, `SELECT pizzas.id FROM pizzas WHERE pizzas.id = ${id}`)
 
     if (result.length == 0)
         throw new NotFoundError(`Pizza with id ${id} not found at updatePizza`, 'pizza not found')
 
     if (updatePizza.name != null)
-        await Query(connection, `UPDATE pizzas SET name='${updatePizza.name}' WHERE id=${id}`)
+        updates.push(`name='${updatePizza.name}'`)
 
     if (updatePizza.price != null)
-        await Query(connection, `UPDATE pizzas SET price=${updatePizza.price} WHERE id=${id}`)
+        updates.push(`price=${updatePizza.price}`)
 
-    if(updatePizza.count != null)
-        await Query(connection, `UPDATE `)
+    if (updatePizza.count != null)
+        updates.push(`count=${updatePizza.count}`)
+
+    if (updates.length > 0)
+        await Query(connection, `UPDATE pizzas SET ${updates} WHERE pizzas.id = ${id}`)
 
     if (updatePizza.ingredients != null) {
         await Query(connection, `DELETE FROM pizzas_ingredients WHERE pizza_id = ${id}`)

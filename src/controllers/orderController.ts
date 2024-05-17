@@ -253,23 +253,28 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
     if (result.length == 0)
         throw new NotFoundError(`Order with id ${id} not found at deleteOrder`, 'order not found')
 
+    const updates: string[] = []
+
     if (updateOrderDto.first_name != null)
-        await Query(connection, `UPDATE orders SET orders.first_name = '${updateOrderDto.first_name}' WHERE orders.id = ${id}`)
+        updates.push(`first_name='${updateOrderDto.first_name}'`)
 
     if (updateOrderDto.last_name != null)
-        await Query(connection, `UPDATE orders SET orders.last_name = '${updateOrderDto.last_name}' WHERE orders.id = ${id}`)
+        updates.push(`last_name='${updateOrderDto.last_name}'`)
 
     if (updateOrderDto.phone_number != null)
-        await Query(connection, `UPDATE orders SET orders.phone_number = '${updateOrderDto.phone_number}' WHERE orders.id = ${id}`)
+        updates.push(`phone_number='${updateOrderDto.phone_number}'`)
 
     if (updateOrderDto.city != null)
-        await Query(connection, `UPDATE orders SET orders.city = '${updateOrderDto.city}' WHERE orders.id = ${id}`)
+        updates.push(`city='${updateOrderDto.city}' `)
 
     if (updateOrderDto.street != null)
-        await Query(connection, `UPDATE orders SET orders.street = '${updateOrderDto.street}' WHERE orders.id = ${id}`)
+        updates.push(`street='${updateOrderDto.street}' `)
 
     if (updateOrderDto.building_number != null)
-        await Query(connection, `UPDATE orders SET orders.building_number = '${updateOrderDto.building_number}' WHERE orders.id = ${id}`)
+        updates.push(`building_number='${updateOrderDto.building_number}'`)
+
+    if (updates.length > 0)
+        await Query(connection, `UPDATE orders SET ${updates} WHERE orders.id = ${id}`)
 
     if (updateOrderDto.pizzas != null) {
         await Query(connection, `DELETE FROM orders_pizzas WHERE orders_pizzas.order_id = ${id}`)
