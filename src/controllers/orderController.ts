@@ -65,7 +65,9 @@ const getOrdersCount = async (req: Request, res: Response, connection: Connectio
 const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
-    const result = await Query<IOrderModel[]>(connection, 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders ORDER BY orders.id')
+    const query = 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, addresses.city, addresses.street, addresses.building_number FROM orders INNER JOIN addresses ON orders.address_id = addresses.id ORDER BY orders.id'
+
+    const result = await Query<IOrderModel[]>(connection, query)
 
     let orderDtos: IOrderDto[] = []
 
@@ -120,7 +122,9 @@ const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res
 const getOrder = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
-    const result = await Query<IOrderModel[]>(connection, `SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, orders.city, orders.street, orders.building_number FROM orders WHERE orders.id = ${id}`)
+    const query = `SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, addresses.city, addresses.street, addresses.building_number FROM orders INNER JOIN addresses ON orders.address_id = addresses.id WHERE orders.id = ${id}`
+
+    const result = await Query<IOrderModel[]>(connection, query)
 
     if (result.length == 0)
         throw new NotFoundError(`Order with id ${id} not found at getOrder`, 'order not found')
@@ -210,10 +214,20 @@ const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response,
 
     await decrementPizzaCounts(createOrderDto.pizzas, connection)
 
+    const adressResult = await Query<{ id: number }[]>(connection, `SELECT adresses.id WHERE adresses.city = '${createOrderDto.city}' AND adresses.street = '${createOrderDto.street}' AND adresses.building_number = '${createOrderDto.building_number}'`)
+
+    let adressesId: number;
+
+    if (adressResult.length > 0)
+        adressesId = adressResult[0].id
+    else {
+        adressesId = (await Query<any>(connection, `INSERT INTO addresses (addresses.city, addresses.street, addresses.building_number)VALUES ('${createOrderDto.city}', '${createOrderDto.street}', '${createOrderDto.building_number}')`)).insertId
+    }
+
     const query = `INSERT INTO orders `
-        + `(orders.first_name, orders.Last_name, orders.phone_number, orders.city, orders.street, orders.building_number) `
+        + `(orders.first_name, orders.Last_name, orders.phone_number, orders.address_id) `
         + `VALUES `
-        + `('${createOrderDto.first_name}', '${createOrderDto.last_name}', '${createOrderDto.phone_number}', '${createOrderDto.city}' ,'${createOrderDto.street}', '${createOrderDto.building_number}')`
+        + `('${createOrderDto.first_name}', '${createOrderDto.last_name}', '${createOrderDto.phone_number}', ${adressesId})`
 
     const result = await Query<any>(connection, query)
 
@@ -264,17 +278,25 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
     if (updateOrderDto.phone_number != null)
         updates.push(`phone_number='${updateOrderDto.phone_number}'`)
 
-    if (updateOrderDto.city != null)
-        updates.push(`city='${updateOrderDto.city}' `)
-
-    if (updateOrderDto.street != null)
-        updates.push(`street='${updateOrderDto.street}' `)
-
-    if (updateOrderDto.building_number != null)
-        updates.push(`building_number='${updateOrderDto.building_number}'`)
-
     if (updates.length > 0)
         await Query(connection, `UPDATE orders SET ${updates} WHERE orders.id = ${id}`)
+
+    let addressesUpdates: string[] = []
+
+    if (updateOrderDto.city != null)
+        addressesUpdates.push(`city='${updateOrderDto.city}' `)
+
+    if (updateOrderDto.street != null)
+        addressesUpdates.push(`street='${updateOrderDto.street}' `)
+
+    if (updateOrderDto.building_number != null)
+        addressesUpdates.push(`building_number='${updateOrderDto.building_number}'`)
+
+    if (addressesUpdates.length > 0) {
+        const adressesId = (await Query<{ id: number }[]>(connection, `SELECT orders.address_id AS "id" WHERE orders.id = ${id}`))[0].id
+
+        await Query(connection, `UPDATE addresses SET ${addressesUpdates} WHERE addresses.id = ${adressesId}`)
+    }
 
     if (updateOrderDto.pizzas != null) {
         await Query(connection, `DELETE FROM orders_pizzas WHERE orders_pizzas.order_id = ${id}`)
