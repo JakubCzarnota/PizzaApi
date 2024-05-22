@@ -30,6 +30,15 @@ app.all('/*', (req, res, next) => {
 app.use(errorHandlingMiddleware)
 
 app.listen(config.server.port, () => {
+
+    console.log('MySQL config: ');
+    console.log(config.mysql);
+
+    console.log('Server config: ');
+    console.log(config.server);
+
+    console.log();
+
     console.log(`Listening on port ${config.server.port}`);
 })
 
