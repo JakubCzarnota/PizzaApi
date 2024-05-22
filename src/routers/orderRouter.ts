@@ -12,10 +12,10 @@ router.get('/',
     [
         check("page")
             .optional()
-            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0"),
+            .isInt({ min: 1 }).withMessage("page must be int, greater or equal 1"),
         check("count")
             .optional()
-            .isInt({ min: 0 }).withMessage("page must be int, greater or equal 0")
+            .isInt({ min: 1 }).withMessage("page must be int, greater or equal 1")
     ],
     tryCatch(orderControler.getAllOrders))
 
