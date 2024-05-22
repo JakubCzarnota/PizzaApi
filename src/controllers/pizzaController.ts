@@ -4,6 +4,7 @@ import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
 import paginate from '../utils/pagination.js'
+import { pizzaModelToPizzaDto } from '../converters/pizzaConverters.js'
 
 declare global {
     interface IPizzaModel {
@@ -15,7 +16,7 @@ declare global {
     }
 
     interface IPizzaDto {
-        id?: number,
+        id: number,
         name: String,
         price: number,
         ingredients: String[],
@@ -66,13 +67,7 @@ const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res
     result.forEach(element => {
         const ingredients = element.ingredients != null ? element.ingredients.split(",") : []
 
-        pizzaDtos.push({
-            id: element.id,
-            name: element.name,
-            price: element.price,
-            ingredients: ingredients,
-            count: element.count
-        })
+        pizzaDtos.push(pizzaModelToPizzaDto(element, ingredients))
     })
 
     return res.status(200).json(paginate(pizzaDtos, paginationOptions))
@@ -99,13 +94,7 @@ const getPizza = async (req: Request<{ id: number }>, res: Response, connection:
 
     const ingredients = result[0].ingredients != null ? result[0].ingredients.split(",") : []
 
-    pizzaDto = {
-        id: result[0].id,
-        name: result[0].name,
-        price: result[0].price,
-        ingredients: ingredients,
-        count: result[0].count
-    }
+    pizzaDto = pizzaModelToPizzaDto(result[0], ingredients)
 
     return res.status(200).json(pizzaDto)
 

@@ -5,6 +5,8 @@ import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
 import paginate from '../utils/pagination.js'
 import UnavalibleError from '../errors/unavalibleError.js'
+import { pizzaModelToPizzaDto } from '../converters/pizzaConverters.js'
+import { orderModelToOrderDto } from '../converters/orderConverters.js'
 
 declare global {
     interface IOrdersPizzasModel {
@@ -94,25 +96,10 @@ const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res
         const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
             const ingredients = value.ingredients != null ? value.ingredients.split(",") : []
 
-            return {
-                id: value.id,
-                name: value.name,
-                price: value.price,
-                ingredients: ingredients,
-                count: value.count
-            }
+            return pizzaModelToPizzaDto(value, ingredients)
         })
 
-        orderDtos.push({
-            id: item.id,
-            first_name: item.first_name,
-            last_name: item.last_name,
-            phone_number: item.phone_number,
-            city: item.city,
-            street: item.street,
-            building_number: item.building_number,
-            pizzas: pizzaDtos
-        })
+        orderDtos.push(orderModelToOrderDto(item, pizzaDtos))
     }
 
     return res.status(200).json(paginate(orderDtos, paginationOptions))
@@ -153,26 +140,10 @@ const getOrder = async (req: Request<{ id: number }>, res: Response, connection:
     const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
         const ingredients = value.ingredients != null ? value.ingredients.split(",") : []
 
-        return {
-            id: value.id,
-            name: value.name,
-            price: value.price,
-            ingredients: ingredients,
-            count: value.count
-        }
+        return pizzaModelToPizzaDto(value, ingredients)
     })
 
-    const orderDto: IOrderDto = {
-        id: item.id,
-        first_name: item.first_name,
-        last_name: item.last_name,
-        phone_number: item.phone_number,
-        city: item.city,
-        street: item.street,
-        building_number: item.building_number,
-        pizzas: pizzaDtos
-    }
-
+    const orderDto: IOrderDto = orderModelToOrderDto(item, pizzaDtos)
     return res.status(200).json(orderDto)
 
 }

@@ -4,6 +4,7 @@ import logger from '../logger.js'
 import NotFoundError from '../errors/notFoundError.js'
 import { Connection } from 'mysql'
 import paginate from '../utils/pagination.js'
+import { ingredientModelToIngredientDto } from '../converters/ingredientConverters.js'
 
 declare global {
     interface IIngredientModel {
@@ -37,6 +38,8 @@ const getAllIngredients = async (req: Request<any, any, any, IPaginationOptions>
 
     const result = await Query<IIngredientModel[]>(connection, 'SELECT ingredients.id, ingredients.name FROM ingredients ORDER BY ingredients.id')
 
+    const ingredientDto = result.map(ingredientModel => ingredientModelToIngredientDto(ingredientModel))
+
     return res.status(200).json(paginate(result as IIngredientDto[], paginationOptions))
 
 }
@@ -48,6 +51,8 @@ const getIngredient = async (req: Request<{ id: number }>, res: Response, connec
 
     if (result.length == 0)
         throw new NotFoundError(`Ingredient with id ${id} not found at getPizza`, 'ingredient not found')
+
+    const ingredientDto = ingredientModelToIngredientDto(result[0])
 
     return res.status(200).json(result[0] as IIngredientDto)
 
