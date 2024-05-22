@@ -16,42 +16,42 @@ declare global {
 
     interface IOrderModel {
         id: number,
-        first_name: string,
-        last_name: string,
-        phone_number: string,
+        firstName: string,
+        lastName: string,
+        phoneNumber: string,
         city: string,
         street: string,
-        building_number: string
+        buildingNumber: string
     }
 
     interface IOrderDto {
         id: number,
-        first_name: string,
-        last_name: string,
-        phone_number: string,
+        firstName: string,
+        lastName: string,
+        phoneNumber: string,
         city: string,
         street: string,
-        building_number: string
+        buildingNumber: string
         pizzas: IPizzaDto[]
     }
 
     interface ICreateOrderDto {
-        first_name: string,
-        last_name: string,
-        phone_number: string,
+        firstName: string,
+        lastName: string,
+        phoneNumber: string,
         city: string,
         street: string,
-        building_number: string
+        buildingNumber: string
         pizzas: number[]
     }
 
     interface IUpdateOrderDto {
-        first_name?: string,
-        last_name?: string,
-        phone_number?: string,
+        firstName?: string,
+        lastName?: string,
+        phoneNumber?: string,
         city?: string,
         street?: string,
-        building_number?: string
+        buildingNumber?: string
         pizzas?: number[]
     }
 }
@@ -67,14 +67,14 @@ const getOrdersCount = async (req: Request, res: Response, connection: Connectio
 const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res: Response, connection: Connection) => {
     const paginationOptions = req.query
 
-    const query = 'SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, addresses.city, addresses.street, addresses.building_number FROM orders INNER JOIN addresses ON orders.address_id = addresses.id ORDER BY orders.id'
+    const query = 'SELECT orders.id, orders.first_name AS "firstName", orders.last_name AS "lastName", orders.phone_number AS "phoneNumber", addresses.city, addresses.street, addresses.building_number AS "buildingNumber" FROM orders INNER JOIN addresses ON orders.address_id = addresses.id ORDER BY orders.id'
 
     const result = await Query<IOrderModel[]>(connection, query)
 
     let orderDtos: IOrderDto[] = []
 
-    for (const item of result) {
-        const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
+    for (const orderModel of result) {
+        const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${orderModel.id}`)
 
         const pizzaIds = ordersPizzasModels.map(value => {
             return value.pizzaId as number
@@ -93,13 +93,13 @@ const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res
             pizzaModels.push((await Query<IPizzaModel[]>(connection, query))[0])
         }
 
-        const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
-            const ingredients = value.ingredients != null ? value.ingredients.split(",") : []
+        const pizzaDtos: IPizzaDto[] = pizzaModels.map(pizzaModel => {
+            const ingredients = pizzaModel.ingredients != null ? pizzaModel.ingredients.split(",") : []
 
-            return pizzaModelToPizzaDto(value, ingredients)
+            return pizzaModelToPizzaDto(pizzaModel, ingredients)
         })
 
-        orderDtos.push(orderModelToOrderDto(item, pizzaDtos))
+        orderDtos.push(orderModelToOrderDto(orderModel, pizzaDtos))
     }
 
     return res.status(200).json(paginate(orderDtos, paginationOptions))
@@ -109,16 +109,16 @@ const getAllOrders = async (req: Request<any, any, any, IPaginationOptions>, res
 const getOrder = async (req: Request<{ id: number }>, res: Response, connection: Connection) => {
     const id = req.params.id
 
-    const query = `SELECT orders.id, orders.first_name, orders.last_name, orders.phone_number, addresses.city, addresses.street, addresses.building_number FROM orders INNER JOIN addresses ON orders.address_id = addresses.id WHERE orders.id = ${id}`
+    const query = `SELECT orders.id, orders.first_name AS "firstName", orders.last_name , orders.phone_number, addresses.city, addresses.street, addresses.building_number AS "buildingNumber" FROM orders INNER JOIN addresses ON orders.address_id = addresses.id WHERE orders.id = ${id}`
 
     const result = await Query<IOrderModel[]>(connection, query)
 
     if (result.length == 0)
         throw new NotFoundError(`Order with id ${id} not found at getOrder`, 'order not found')
 
-    const item = result[0]
+    const orderModel = result[0]
 
-    const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${item.id}`)
+    const ordersPizzasModels = await Query<IOrdersPizzasModel[]>(connection, `SELECT orders_pizzas.order_id AS orderId ,orders_pizzas.pizza_id AS pizzaId FROM orders_pizzas WHERE orders_pizzas.order_id = ${orderModel.id}`)
 
     const pizzaIds = ordersPizzasModels.map(value => {
         return value.pizzaId as number
@@ -137,13 +137,13 @@ const getOrder = async (req: Request<{ id: number }>, res: Response, connection:
         pizzaModels.push((await Query<IPizzaModel[]>(connection, query))[0])
     }
 
-    const pizzaDtos: IPizzaDto[] = pizzaModels.map(value => {
-        const ingredients = value.ingredients != null ? value.ingredients.split(",") : []
+    const pizzaDtos: IPizzaDto[] = pizzaModels.map(pizzaModel => {
+        const ingredients = pizzaModel.ingredients != null ? pizzaModel.ingredients.split(",") : []
 
-        return pizzaModelToPizzaDto(value, ingredients)
+        return pizzaModelToPizzaDto(pizzaModel, ingredients)
     })
 
-    const orderDto: IOrderDto = orderModelToOrderDto(item, pizzaDtos)
+    const orderDto: IOrderDto = orderModelToOrderDto(orderModel, pizzaDtos)
     return res.status(200).json(orderDto)
 
 }
@@ -185,20 +185,20 @@ const createOrder = async (req: Request<{}, {}, ICreateOrderDto>, res: Response,
 
     await decrementPizzaCounts(createOrderDto.pizzas, connection)
 
-    const adressResult = await Query<{ id: number }[]>(connection, `SELECT adresses.id WHERE adresses.city = '${createOrderDto.city}' AND adresses.street = '${createOrderDto.street}' AND adresses.building_number = '${createOrderDto.building_number}'`)
+    const adressResult = await Query<{ id: number }[]>(connection, `SELECT adresses.id WHERE adresses.city = '${createOrderDto.city}' AND adresses.street = '${createOrderDto.street}' AND adresses.building_number = '${createOrderDto.buildingNumber}'`)
 
     let adressesId: number;
 
     if (adressResult.length > 0)
         adressesId = adressResult[0].id
     else {
-        adressesId = (await Query<any>(connection, `INSERT INTO addresses (addresses.city, addresses.street, addresses.building_number)VALUES ('${createOrderDto.city}', '${createOrderDto.street}', '${createOrderDto.building_number}')`)).insertId
+        adressesId = (await Query<any>(connection, `INSERT INTO addresses (addresses.city, addresses.street, addresses.building_number)VALUES ('${createOrderDto.city}', '${createOrderDto.street}', '${createOrderDto.buildingNumber}')`)).insertId
     }
 
     const query = `INSERT INTO orders `
         + `(orders.first_name, orders.Last_name, orders.phone_number, orders.address_id) `
         + `VALUES `
-        + `('${createOrderDto.first_name}', '${createOrderDto.last_name}', '${createOrderDto.phone_number}', ${adressesId})`
+        + `('${createOrderDto.firstName}', '${createOrderDto.lastName}', '${createOrderDto.phoneNumber}', ${adressesId})`
 
     const result = await Query<any>(connection, query)
 
@@ -240,14 +240,14 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
 
     const updates: string[] = []
 
-    if (updateOrderDto.first_name != null)
-        updates.push(`first_name='${updateOrderDto.first_name}'`)
+    if (updateOrderDto.firstName != null)
+        updates.push(`first_name='${updateOrderDto.firstName}'`)
 
-    if (updateOrderDto.last_name != null)
-        updates.push(`last_name='${updateOrderDto.last_name}'`)
+    if (updateOrderDto.lastName != null)
+        updates.push(`last_name='${updateOrderDto.lastName}'`)
 
-    if (updateOrderDto.phone_number != null)
-        updates.push(`phone_number='${updateOrderDto.phone_number}'`)
+    if (updateOrderDto.phoneNumber != null)
+        updates.push(`phone_number='${updateOrderDto.phoneNumber}'`)
 
     if (updates.length > 0)
         await Query(connection, `UPDATE orders SET ${updates} WHERE orders.id = ${id}`)
@@ -260,8 +260,8 @@ const updateOrder = async (req: Request<{ id: number }, {}, IUpdateOrderDto>, re
     if (updateOrderDto.street != null)
         addressesUpdates.push(`street='${updateOrderDto.street}' `)
 
-    if (updateOrderDto.building_number != null)
-        addressesUpdates.push(`building_number='${updateOrderDto.building_number}'`)
+    if (updateOrderDto.buildingNumber != null)
+        addressesUpdates.push(`building_number='${updateOrderDto.buildingNumber}'`)
 
     if (addressesUpdates.length > 0) {
         const adressesId = (await Query<{ id: number }[]>(connection, `SELECT orders.address_id AS "id" WHERE orders.id = ${id}`))[0].id

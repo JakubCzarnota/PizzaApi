@@ -12,7 +12,7 @@ declare global {
         id: number,
         city: string,
         street: string,
-        building_number: string
+        buildingNumber: string
     }
 
     interface IAddressDto {
@@ -47,7 +47,7 @@ const getAllAddresses = async (req: Request<any, any, any, IPaginationOptions>, 
 
     const paginationOptions = req.query
 
-    const result = await Query<IAddressModel[]>(connection, 'SELECT addresses.id, addresses.city, addresses.street, addresses.building_number FROM addresses')
+    const result = await Query<IAddressModel[]>(connection, 'SELECT addresses.id, addresses.city, addresses.street, addresses.building_number AS "buildingNumber" FROM addresses')
 
     const addressDtos = result.map(value => AddressModelToAddressDto(value))
 
@@ -59,7 +59,7 @@ const getAddress = async (req: Request<{ id: number }>, res: Response, connectio
 
     const id = req.params.id
 
-    const result = await Query<IAddressModel[]>(connection, `SELECT addresses.id, addresses.city, addresses.street, addresses.building_number FROM addresses WHERE addresses.id = ${id}`)
+    const result = await Query<IAddressModel[]>(connection, `SELECT addresses.id, addresses.city, addresses.street, addresses.building_number AS "buildingNumber" FROM addresses WHERE addresses.id = ${id}`)
 
     if (result.length == 0)
         throw new NotFoundError(`Address with id ${id} not found at getaddress`, 'address not found')

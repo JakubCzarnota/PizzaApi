@@ -3,7 +3,7 @@ export const AddressModelToAddressDto = (adressModel: IAddressModel): IAddressDt
         id: adressModel.id,
         city: adressModel.city,
         street: adressModel.street,
-        buildingNumber: adressModel.building_number
+        buildingNumber: adressModel.buildingNumber
     }
 }
 

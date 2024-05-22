@@ -64,11 +64,11 @@ const getAllPizzas = async (req: Request<any, any, any, IPaginationOptions>, res
 
     let pizzaDtos: IPizzaDto[] = [];
 
-    result.forEach(element => {
-        const ingredients = element.ingredients != null ? element.ingredients.split(",") : []
+    for (const pizzaModel of result) {
+        const ingredients = pizzaModel.ingredients != null ? pizzaModel.ingredients.split(",") : []
 
-        pizzaDtos.push(pizzaModelToPizzaDto(element, ingredients))
-    })
+        pizzaDtos.push(pizzaModelToPizzaDto(pizzaModel, ingredients))
+    }
 
     return res.status(200).json(paginate(pizzaDtos, paginationOptions))
 
