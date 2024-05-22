@@ -21,7 +21,7 @@ app.use('/ingredients', ingredientRouter)
 
 app.use('/orders', orderRouter)
 
-app.use('/adresses', adressRouter)
+app.use('/addresses', adressRouter)
 
 app.all('/*', (req, res, next) => {
     next(new NotFoundError(`Invalid path: ${req.url}`, 'Not found'))
